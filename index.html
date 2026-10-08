@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Rail Rush — Ramadan & Friends</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#07111d;color:white}
+body{touch-action:none}.game{position:relative;width:100vw;height:100vh;overflow:hidden;background:linear-gradient(#43b8ff 0%,#dff6ff 46%,#6a727b 46%,#343b42 100%)}
+.sky{position:absolute;inset:0 0 52%;background:linear-gradient(#48bfff,#c8f0ff);z-index:0}
+.city{position:absolute;bottom:48%;left:0;width:100%;height:22%;background:repeating-linear-gradient(90deg,#526474 0 70px,#3e5060 70px 120px);clip-path:polygon(0 40%,8% 30%,8% 52%,15% 18%,21% 42%,28% 10%,36% 45%,43% 24%,50% 45%,58% 13%,66% 39%,73% 20%,80% 46%,88% 12%,95% 42%,100% 25%,100% 100%,0 100%);opacity:.9}
+.track{position:absolute;left:50%;bottom:-8%;width:120%;height:70%;transform:translateX(-50%);background:linear-gradient(90deg,#202830 0 30%,#515a60 30% 70%,#202830 70%);clip-path:polygon(28% 0,72% 0,100% 100%,0 100%);z-index:1}
+.rail{position:absolute;bottom:-2%;height:65%;width:7px;background:#cbd2d6;z-index:2;box-shadow:0 0 3px #000}
+.r1{left:calc(50% - 22%);transform:rotate(4deg)}.r2{left:50%}.r3{left:calc(50% + 22%);transform:rotate(-4deg)}
+.sleeper{position:absolute;width:54%;height:12px;left:23%;background:#30363b;border-radius:4px;z-index:2;animation:move 1s linear infinite}
+@keyframes move{from{transform:translateY(-80px) scale(.2)}to{transform:translateY(420px) scale(1.4)}}
+.hud{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;z-index:10;gap:8px}
+.pill{background:#081523d9;border:2px solid #ffffff55;padding:9px 13px;border-radius:16px;font-weight:800;backdrop-filter:blur(5px)}
+.player{position:absolute;bottom:16%;left:50%;width:64px;height:92px;transform:translateX(-50%);z-index:7;transition:left .12s}
+.head{width:38px;height:38px;border-radius:50%;background:#c88655;margin:auto;border:3px solid #222}
+.body{width:45px;height:45px;background:var(--shirt);border-radius:12px 12px 8px 8px;margin:-2px auto 0;border:3px solid #222}
+.leg{position:absolute;bottom:0;width:15px;height:32px;background:#252a32;border-radius:8px}.leg.a{left:12px}.leg.b{right:12px}
+.name{position:absolute;top:-27px;width:100%;text-align:center;font-size:11px;font-weight:bold;text-shadow:0 2px #000}
+.obstacle{position:absolute;z-index:6;width:70px;height:55px;border-radius:8px;background:linear-gradient(#ffca28,#f57c00);border:4px solid #7b3f00;box-shadow:0 5px 0 #7b3f00}
+.coin{position:absolute;z-index:5;width:30px;height:30px;border-radius:50%;background:#ffd83d;border:4px solid #fff0a0;box-shadow:0 0 16px #ffd83d}
+.controls{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:15px;z-index:20}
+.btn{width:65px;height:55px;border:0;border-radius:17px;background:#ffffffdd;font-size:25px;font-weight:bold;box-shadow:0 5px 0 #9aa0a6}
+.btn:active{transform:translateY(4px);box-shadow:0 1px 0 #9aa0a6}
+.overlay{position:absolute;inset:0;background:#06111de8;z-index:50;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{width:min(440px,95vw);background:linear-gradient(145deg,#12273b,#071321);border:2px solid #ffffff30;border-radius:28px;padding:25px;text-align:center;box-shadow:0 20px 70px #0008}
+h1{margin:0 0 8px;font-size:34px;color:#5ed4ff}.sub{opacity:.8;margin-bottom:20px}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choose{border:2px solid #ffffff22;background:#ffffff0e;color:#fff;border-radius:16px;padding:12px;font-weight:800}.choose.active{border-color:#4fd5ff;background:#123c56}
+.start{margin-top:18px;width:100%;padding:15px;border:0;border-radius:17px;background:#20d878;color:#062313;font-weight:900;font-size:18px}
+.help{font-size:12px;opacity:.65;margin-top:12px}
+.gameover{display:none}.gameover.show{display:flex}
+</style>
+</head>
+<body>
+<div class="game" id="game">
+  <div class="sky"></div><div class="city"></div>
+  <div class="track"></div><div class="rail r1"></div><div class="rail r2"></div><div class="rail r3"></div>
+  <div id="world"></div>
+  <div class="hud"><div class="pill">🏆 <span id="score">0</span></div><div class="pill">🪙 <span id="coins">0</span></div><div class="pill">⚡ <span id="speed">1x</span></div></div>
+  <div class="player" id="player"><div class="name" id="pname">Ramadan</div><div class="head"></div><div class="body" id="body"></div><div class="leg a"></div><div class="leg b"></div></div>
+  <div class="controls"><button class="btn" id="left">◀</button><button class="btn" id="jump">▲</button><button class="btn" id="right">▶</button></div>
+  <div class="overlay" id="menu">
+    <div class="card">
+      <h1>🚆 RAIL RUSH</h1><div class="sub">Endless runner buatan sendiri — Ramadan & Friends</div>
+      <div class="players">
+        <button class="choose active" data-name="Ramadan" data-color="#20c997">👦 Ramadan</button>
+        <button class="choose" data-name="Andika" data-color="#4dabf7">🧢 Andika</button>
+        <button class="choose" data-name="Syuhada" data-color="#ff6b9a">🧕 Syuhada</button>
+        <button class="choose" data-name="Aulia" data-color="#ffd43b">😎 Aulia</button>
+      </div>
+      <button class="start" id="start">MULAI GAME ▶</button>
+      <div class="help">PC: ← → untuk pindah jalur, ↑ untuk lompat. HP: swipe atau tombol.</div>
+    </div>
+  </div>
+  <div class="overlay gameover" id="over">
+    <div class="card"><h1>💥 GAME OVER</h1><div id="result"></div><button class="start" id="again">MAIN LAGI</button></div>
+  </div>
+</div>
+<script>
+const game=document.getElementById('game'), player=document.getElementById('player'), body=document.getElementById('body');
+const world=document.getElementById('world'), scoreEl=document.getElementById('score'), coinEl=document.getElementById('coins'), speedEl=document.getElementById('speed');
+const menu=document.getElementById('menu'), over=document.getElementById('over'), result=document.getElementById('result');
+let lane=1, running=false, score=0, coins=0, speed=5, spawn=0, last=0, jump=false, vy=0, selected='Ramadan';
+const colors={Ramadan:'#20c997',Andika:'#4dabf7',Syuhada:'#ff6b9a',Aulia:'#ffd43b'};
+const laneX=()=>[34,50,66][lane];
+function setLane(){player.style.left=laneX()+'%'}
+function choose(name){selected=name; document.querySelectorAll('.choose').forEach(b=>b.classList.toggle('active',b.dataset.name===name));document.getElementById('pname').textContent=name;body.style.setProperty('--shirt',colors[name]);}
+document.querySelectorAll('.choose').forEach(b=>b.onclick=()=>choose(b.dataset.name));
+function reset(){
+ world.innerHTML=''; lane=1; score=0; coins=0; speed=5; spawn=0; jump=false; vy=0; setLane();
+ scoreEl.textContent=0;coinEl.textContent=0;speedEl.textContent='1x';
+}
+function make(type,l){
+ const el=document.createElement('div');el.className=type;
+ el.style.left=`${[29,47,65][l]}%`;el.style.top='-80px';
+ world.appendChild(el);return el;
+}
+function start(){reset();menu.style.display='none';over.classList.remove('show');running=true;last=performance.now();requestAnimationFrame(loop)}
+function end(){running=false;result.innerHTML=`<b>${selected}</b> mendapat skor <b>${Math.floor(score)}</b> dan ${coins} koin.`;over.classList.add('show')}
+function jumpNow(){if(!jump){jump=true;vy=12}}
+function move(d){lane=Math.max(0,Math.min(2,lane+d));setLane()}
+function collide(a,b){let A=a.getBoundingClientRect(),B=b.getBoundingClientRect();return A.left<B.right&&A.right>B.left&&A.top<B.bottom&&A.bottom>B.top}
+function loop(t){
+ if(!running)return;let dt=Math.min(32,t-last);last=t;score+=dt*.035*speed;scoreEl.textContent=Math.floor(score);
+ speed=5+Math.min(7,score/180);speedEl.textContent=(speed/5).toFixed(1)+'x';
+ if(jump){vy-=.55;jumpY=parseFloat(player.dataset.y||0)+vy;player.dataset.y=jumpY;player.style.bottom=(16+jumpY*.12)+'%';if(jumpY<=0){jump=false;player.dataset.y=0;player.style.bottom='16%'}}
+ spawn+=dt;
+ if(spawn>Math.max(360,850-score*1.2)){spawn=0;let l=Math.floor(Math.random()*3), type=Math.random()<.72?'obstacle':'coin';make(type,l)}
+ [...world.children].forEach(el=>{
+   let y=parseFloat(el.dataset.y||-80)+speed*dt*.085;el.dataset.y=y;el.style.top=y+'px';
+   if(el.classList.contains('coin')){el.style.transform='rotate('+y*5+'deg)';if(collide(player,el)){coins++;coinEl.textContent=coins;el.remove()}}
+   if(el.classList.contains('obstacle')&&collide(player,el)&&!jump)end();
+   if(y>innerHeight+100)el.remove();
+ });
+ requestAnimationFrame(loop)
+}
+document.getElementById('start').onclick=start;document.getElementById('again').onclick=start;
+document.getElementById('left').onclick=()=>move(-1);document.getElementById('right').onclick=()=>move(1);document.getElementById('jump').onclick=jumpNow;
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')move(-1);if(e.key==='ArrowRight')move(1);if(e.key==='ArrowUp'||e.code==='Space')jumpNow()});
+let sx=0,sy=0;game.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY},{passive:true});
+game.addEventListener('touchend',e=>{let x=e.changedTouches[0].clientX-sx,y=e.changedTouches[0].clientY-sy;if(Math.abs(x)>35)move(x>0?1:-1);else if(y<-35)jumpNow()},{passive:true});
+choose('Ramadan');setLane();
+</script>
+</body>
+</html>
